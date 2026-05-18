@@ -29,3 +29,29 @@ Following along on X: @kbarrbuilds
 
 ## Decisions
 Architecture decisions live in [`/decisions`](./decisions).
+
+## Running locally
+
+1. Clone the repo and `cd` into it.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Copy the example env file and add your Anthropic API key:
+   ```bash
+   cp .env.local.example .env.local
+   # then edit .env.local and set ANTHROPIC_API_KEY=sk-ant-...
+   ```
+   Get a key at <https://console.anthropic.com/settings/keys>.
+4. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+5. Open <http://localhost:3000>, paste a title + company, hit **Decode**.
+
+### Deploying to Vercel
+
+1. Push this repo to GitHub (already done if you cloned the canonical repo).
+2. Import the project at <https://vercel.com/new>.
+3. In **Settings → Environment Variables**, add `ANTHROPIC_API_KEY` for all environments.
+4. Deploy. Vercel will auto-detect Next.js.
