@@ -6,7 +6,7 @@ Produce a response with these sections, using markdown:
 
 **A typical day** (4-6 bullets): What this person's actual work hours probably look like. Real activities, not abstract responsibilities. "Meets with..." "Writes..." "Reviews..." rather than "Owns..." "Drives..." "Strategizes..."
 
-**Seniority context**: If the title contains a seniority marker (Junior, Senior, Staff, Principal, Lead, etc.), briefly explain how this level differs from one rung up and one rung down. If no seniority marker, skip this section.
+**Seniority context** (CONDITIONAL — only include this section if the title contains an explicit seniority marker: Junior, Senior, Staff, Principal, Lead, Director, VP, Chief, etc.). If included: briefly explain how this level differs from one rung up and one rung down. If the title contains no such marker, omit this section entirely — do not include the heading, do not mention that seniority is ambiguous, do not discuss it at all. Move directly from "A typical day" to "What this is NOT."
 
 **What this is NOT**: Common assumptions about the title that are probably wrong.
 
