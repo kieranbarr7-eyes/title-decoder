@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Title Decoder",
   description:
-    "What does someone with this LinkedIn title actually do? Paste a title and company, get a real explanation.",
+    "A working encyclopedia for modern job titles. Paste a title and company, get a real explanation.",
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-900 text-slate-100 antialiased">
+      <body className="min-h-screen bg-paper font-serif text-ink antialiased">
         {children}
       </body>
     </html>
