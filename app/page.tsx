@@ -121,6 +121,19 @@ export default function Home() {
   }, []);
 
   function resetToInput() {
+    // Only advance the counter when leaving a result — Cmd+K from the input
+    // state is just a refocus, not a new entry.
+    if (result) {
+      setEntryNumber((prev) => {
+        const next = prev + 1;
+        try {
+          localStorage.setItem("td_entry_number", String(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+    }
     setResult("");
     setError("");
     setSubmittedTitle("");
@@ -173,15 +186,6 @@ export default function Home() {
       setResult(data.result);
       setSubmittedTitle(title.trim());
       setSubmittedCompany(company.trim());
-      setEntryNumber((prev) => {
-        const next = prev + 1;
-        try {
-          localStorage.setItem("td_entry_number", String(next));
-        } catch {
-          // ignore
-        }
-        return next;
-      });
     } catch (err) {
       const detail = err instanceof Error ? err.message : "Unknown error";
       setError(`Request failed: ${detail}`);
