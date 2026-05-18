@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import { AvatarMascot } from "./components/AvatarMascot";
 
@@ -29,6 +35,67 @@ function parseSections(md: string): Section[] {
   return sections;
 }
 
+function SectionBody({ body, marker }: { body: string; marker: number }) {
+  let injected = false;
+  const Marker = (): ReactNode => (
+    <span className="mr-[6px] font-mono font-medium text-vermillion">
+      {marker}
+    </span>
+  );
+
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => {
+          if (!injected) {
+            injected = true;
+            return (
+              <p className="mb-3 text-[14.5px] leading-[1.6] text-ink-body last:mb-0">
+                <Marker />
+                {children}
+              </p>
+            );
+          }
+          return (
+            <p className="mb-3 text-[14.5px] leading-[1.6] text-ink-body last:mb-0">
+              {children}
+            </p>
+          );
+        },
+        ul: ({ children }) => (
+          <ul className="my-2 list-disc space-y-1.5 pl-5 marker:text-vermillion">
+            {children}
+          </ul>
+        ),
+        li: ({ children }) => {
+          if (!injected) {
+            injected = true;
+            return (
+              <li className="text-[14.5px] leading-[1.6] text-ink-body">
+                <Marker />
+                {children}
+              </li>
+            );
+          }
+          return (
+            <li className="text-[14.5px] leading-[1.6] text-ink-body">
+              {children}
+            </li>
+          );
+        },
+        strong: ({ children }) => (
+          <strong className="font-semibold text-ink-body">{children}</strong>
+        ),
+        em: ({ children }) => (
+          <em className="italic text-ink-muted">{children}</em>
+        ),
+      }}
+    >
+      {body}
+    </ReactMarkdown>
+  );
+}
+
 export default function Home() {
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
@@ -37,11 +104,51 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [submittedTitle, setSubmittedTitle] = useState("");
   const [submittedCompany, setSubmittedCompany] = useState("");
-  const [stampNumber, setStampNumber] = useState<string | null>(null);
+  const [entryNumber, setEntryNumber] = useState(1);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    setStampNumber(String(Math.floor(Math.random() * 990) + 10));
+    try {
+      const stored = localStorage.getItem("td_entry_number");
+      if (stored) {
+        const n = parseInt(stored, 10);
+        if (Number.isFinite(n) && n > 0) setEntryNumber(n);
+      }
+    } catch {
+      // localStorage unavailable; keep default 1
+    }
   }, []);
+
+  function resetToInput() {
+    setResult("");
+    setError("");
+    setSubmittedTitle("");
+    setSubmittedCompany("");
+    requestAnimationFrame(() => titleInputRef.current?.focus());
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+
+      if (e.key === "k" || e.key === "K") {
+        e.preventDefault();
+        resetToInput();
+        return;
+      }
+
+      if (e.key === "Enter") {
+        if (!result && !isLoading && title.trim() && company.trim()) {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [result, isLoading, title, company]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,6 +173,15 @@ export default function Home() {
       setResult(data.result);
       setSubmittedTitle(title.trim());
       setSubmittedCompany(company.trim());
+      setEntryNumber((prev) => {
+        const next = prev + 1;
+        try {
+          localStorage.setItem("td_entry_number", String(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
     } catch (err) {
       const detail = err instanceof Error ? err.message : "Unknown error";
       setError(`Request failed: ${detail}`);
@@ -78,161 +194,148 @@ export default function Home() {
   const sections = result ? parseSections(result) : [];
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[700px] flex-col px-6 py-12">
-      <header className="flex items-start justify-between gap-6 border-b border-rule pb-6">
-        <div>
+    <main className="flex min-h-screen items-start justify-center bg-white px-4 py-10 sm:py-16">
+      <div className="w-full max-w-[640px] border border-rule bg-white p-6 sm:p-7">
+        <header className="flex items-start justify-between gap-4 pb-4">
+          <div className="min-w-0">
+            <div
+              className="small-caps font-mono text-[11px] text-ink"
+              style={{ letterSpacing: "0.3em" }}
+            >
+              title decoder
+            </div>
+            <div className="mt-1 text-[13px] text-ink-muted">
+              a working dictionary for modern job titles.
+            </div>
+          </div>
           <div
-            className="font-mono text-[11px] uppercase text-ink"
-            style={{ letterSpacing: "0.3em" }}
+            className="small-caps shrink-0 rounded-[3px] border border-vermillion px-[9px] py-1 font-mono text-[11px] text-vermillion"
+            aria-label={`Entry number ${entryNumber}`}
           >
-            title decoder
+            No.&nbsp;{entryNumber}
           </div>
-          <div className="mt-1.5 font-serif text-[13px] italic text-ink-muted">
-            a working encyclopedia for modern job titles.
-          </div>
-        </div>
-        <div
-          className="small-caps shrink-0 rotate-[-5deg] border border-accent px-2.5 py-1 font-mono text-[11px] text-accent"
-          style={{ letterSpacing: "0.12em" }}
-        >
-          entry № {stampNumber ?? "—"} · decoded
-        </div>
-      </header>
+        </header>
 
-      <form onSubmit={handleSubmit} className="mt-10 flex flex-col gap-6">
-        <label className="flex flex-col gap-2">
-          <span
-            className="small-caps font-mono text-[11px] text-ink-muted"
-            style={{ letterSpacing: "0.18em" }}
-          >
-            job title
-          </span>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="storyteller engineer"
-            autoComplete="off"
-            className="border-0 border-b border-accent/50 bg-paper-light px-2 py-2 font-serif text-[16px] text-ink placeholder-ink-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/60"
-          />
-        </label>
+        <hr className="border-t border-rule" />
 
-        <label className="flex flex-col gap-2">
-          <span
-            className="small-caps font-mono text-[11px] text-ink-muted"
-            style={{ letterSpacing: "0.18em" }}
-          >
-            company name
-          </span>
-          <input
-            type="text"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="pika labs"
-            autoComplete="off"
-            className="border-0 border-b border-accent/50 bg-paper-light px-2 py-2 font-serif text-[16px] text-ink placeholder-ink-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/60"
-          />
-        </label>
+        {!result ? (
+          <div className="pt-6">
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-3"
+            >
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[13px] text-ink-body">Job title</span>
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Storyteller Engineer"
+                  autoComplete="off"
+                  className="rounded border border-rule bg-white px-[14px] py-[10px] text-[14.5px] text-ink-body placeholder-ink-muted/70 focus:border-vermillion focus:outline-none"
+                />
+              </label>
 
-        <button
-          type="submit"
-          disabled={submitDisabled}
-          className="small-caps mt-2 self-start border border-accent bg-transparent px-5 py-2 font-mono text-[12px] text-accent transition hover:bg-accent hover:text-paper disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-accent"
-          style={{ letterSpacing: "0.2em" }}
-        >
-          {isLoading ? "decoding…" : "decode"}
-        </button>
-      </form>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[13px] text-ink-body">Company</span>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Pika Labs"
+                  autoComplete="off"
+                  className="rounded border border-rule bg-white px-[14px] py-[10px] text-[14.5px] text-ink-body placeholder-ink-muted/70 focus:border-vermillion focus:outline-none"
+                />
+              </label>
 
-      {error && (
-        <div
-          role="alert"
-          className="mt-8 border border-red-900/60 bg-red-950/30 px-4 py-3 font-serif text-[14px] text-red-200"
-        >
-          {error}
-        </div>
-      )}
+              <button
+                type="submit"
+                disabled={submitDisabled}
+                className={`mt-1 self-start rounded-[6px] bg-vermillion px-[18px] py-[10px] text-[14.5px] font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  isLoading ? "animate-pulse" : ""
+                }`}
+              >
+                {isLoading ? "decoding…" : "Decode →"}
+              </button>
 
-      {result && (
-        <article className="mt-14">
-          <div className="flex items-start gap-5">
-            <AvatarMascot />
-            <div className="flex-1 pt-1">
-              <h1 className="font-serif text-[32px] leading-tight text-ink">
-                {submittedTitle}
-              </h1>
-              <div className="mt-1.5 font-mono text-[11px] text-ink-muted">
-                <span className="italic text-accent">noun</span>
-                <span> · </span>
-                <span>{submittedCompany}</span>
+              <p className="mt-1 font-mono text-[11px] text-ink-muted">
+                or press ⌘ + Enter
+              </p>
+            </form>
+
+            {error && (
+              <div
+                role="alert"
+                className="mt-4 rounded border border-vermillion/40 bg-vermillion/5 px-3 py-2 text-[13px] text-ink-body"
+              >
+                {error}
               </div>
-            </div>
+            )}
           </div>
-
-          <div
-            aria-hidden="true"
-            className="my-8 text-center font-mono text-[16px] text-accent/70"
-            style={{ letterSpacing: "0.6em" }}
-          >
-            ❦ ❦ ❦
-          </div>
-
-          {sections.length === 0 ? (
-            <div className="font-serif text-[15px] leading-[1.62] text-ink">
-              <ReactMarkdown>{result}</ReactMarkdown>
+        ) : (
+          <article className="pt-6">
+            <div className="flex items-center gap-3">
+              <AvatarMascot size={28} />
+              <h1
+                className="break-words font-serif text-[34px] font-medium lowercase text-ink"
+                style={{ lineHeight: 1.05, letterSpacing: "-0.02em" }}
+              >
+                {submittedTitle.toLowerCase()}
+              </h1>
             </div>
-          ) : (
-            <div className="flex flex-col gap-8">
-              {sections.map((section, i) => (
-                <section key={i}>
-                  <div
-                    className="small-caps font-mono text-[11px] text-accent"
-                    style={{ letterSpacing: "0.22em" }}
+
+            <div
+              className="mt-2 font-mono text-[11px] text-ink-muted"
+              style={{ paddingLeft: 40, letterSpacing: "0.05em" }}
+            >
+              <span className="italic text-vermillion">noun</span>
+              <span>{" · "}</span>
+              <span>{submittedCompany}</span>
+            </div>
+
+            <div className="mt-6">
+              {sections.length > 0 ? (
+                sections.map((section, i) => (
+                  <section
+                    key={i}
+                    className="mt-[1.1rem] border-t border-rule pt-[1.1rem]"
                   >
-                    ↳ {section.label}
-                  </div>
-                  <div className="mt-3 flex gap-4">
-                    <span className="w-5 shrink-0 pt-[2px] font-mono text-[14px] leading-[1.62] text-accent tabular-nums">
-                      {i + 1}
-                    </span>
-                    <div className="flex-1">
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => (
-                            <p className="mb-3 font-serif text-[15px] leading-[1.62] text-ink last:mb-0">
-                              {children}
-                            </p>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="my-2 list-disc space-y-1.5 pl-5 marker:text-accent">
-                              {children}
-                            </ul>
-                          ),
-                          li: ({ children }) => (
-                            <li className="font-serif text-[15px] leading-[1.62] text-ink">
-                              {children}
-                            </li>
-                          ),
-                          strong: ({ children }) => (
-                            <strong className="font-semibold text-ink">
-                              {children}
-                            </strong>
-                          ),
-                          em: ({ children }) => (
-                            <em className="italic text-ink-muted">{children}</em>
-                          ),
-                        }}
-                      >
-                        {section.body}
-                      </ReactMarkdown>
+                    <div
+                      className="small-caps mb-2 font-mono text-[11px] font-medium text-vermillion"
+                      style={{ letterSpacing: "0.2em" }}
+                    >
+                      {section.label}
                     </div>
-                  </div>
-                </section>
-              ))}
+                    <SectionBody body={section.body} marker={i + 1} />
+                  </section>
+                ))
+              ) : (
+                <div className="text-[14.5px] leading-[1.6] text-ink-body">
+                  <ReactMarkdown>{result}</ReactMarkdown>
+                </div>
+              )}
             </div>
-          )}
-        </article>
-      )}
+
+            <div className="mt-8 flex items-center justify-between border-t border-rule pt-4">
+              <button
+                type="button"
+                onClick={resetToInput}
+                className="cursor-pointer font-mono text-[11px] text-ink-muted transition hover:text-ink-body"
+              >
+                ↻&nbsp;&nbsp;decode another
+              </button>
+              <kbd
+                className="rounded-[3px] border border-rule px-[5px] py-[2px] font-mono text-[11px] text-ink"
+                title="Cmd+K on Mac, Ctrl+K on Windows/Linux"
+              >
+                ⌘K
+              </kbd>
+            </div>
+          </article>
+        )}
+      </div>
     </main>
   );
 }

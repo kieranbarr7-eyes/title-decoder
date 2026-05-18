@@ -3,8 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Title Decoder",
-  description:
-    "A working encyclopedia for modern job titles. Paste a title and company, get a real explanation.",
+  description: "A working dictionary for modern job titles.",
 };
 
 export default function RootLayout({
@@ -14,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-paper font-serif text-ink antialiased">
+      <body className="min-h-screen bg-white font-sans text-ink-body antialiased">
         {children}
       </body>
     </html>
