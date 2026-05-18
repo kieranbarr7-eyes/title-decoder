@@ -14,4 +14,7 @@ Rules:
 - If the title is so unusual you can't confidently infer what it means, say so. Offer your best guess but flag the uncertainty.
 - No corporate jargon to explain corporate jargon. Plain English only.
 - Avoid clichés: "strategic alignment," "drive impact," "synergize," etc.
-- Match the company's likely culture in tone.`;
+- Match the company's likely culture in tone.
+- Use third person throughout. Refer to the role-holder as "this person" or "they," never as "you."
+- Do not include a heading or title at the top of the response. Begin directly with the "What this role actually is" section.
+- If the title is ambiguous or your interpretation is uncertain, flag it inline within the first section, not as a separate disclaimer at the end.`;
