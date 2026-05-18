@@ -14,7 +14,7 @@ Claude Haiku 4.5 (`claude-haiku-4-5`) for the `/api/decode` endpoint.
 
 ## When to revisit
 - If outputs degrade on less common titles (research-y, niche, or non-English company names), upgrade to Sonnet for harder cases — likely via a confidence signal or a per-request override rather than swapping the default.
-- If monthly cost grows past $X/month, consider model routing: cheap default model + escalation to Sonnet only when the cheap model flags low confidence.
+- If monthly Claude API cost exceeds $50/month (~12k decodes at ~$0.004/call for this prompt size), revisit. That's the threshold where real usage exists and pre-built role ladders + cache-first architecture become higher-leverage than continuing to call the LLM live for common titles. Below that, the engineering time isn't worth the savings. The natural sequence at the threshold: response cache by `(title, company)` → ladder of pre-computed answers for the top-N most-decoded titles → model routing (cheap default, Sonnet escalation on low confidence).
 - If Anthropic ships a smaller-than-Haiku model with comparable quality, re-baseline.
 
 ## Date
