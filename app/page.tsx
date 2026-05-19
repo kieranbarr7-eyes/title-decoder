@@ -9,6 +9,8 @@ import {
 } from "react";
 import ReactMarkdown from "react-markdown";
 import { AvatarMascot } from "./components/AvatarMascot";
+import { ShareButton } from "./components/ShareButton";
+import { ShareableEntry } from "./components/ShareableEntry";
 
 type Section = { label: string; body: string };
 
@@ -107,6 +109,7 @@ export default function Home() {
   const [entryNumber, setEntryNumber] = useState(1);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const shareableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -330,6 +333,11 @@ export default function Home() {
               >
                 ↻&nbsp;&nbsp;decode another
               </button>
+              <ShareButton
+                targetRef={shareableRef}
+                title={submittedTitle}
+                entryNumber={entryNumber}
+              />
               <kbd
                 className="rounded-[3px] border border-rule px-[5px] py-[2px] font-mono text-[11px] text-ink"
                 title="Cmd+K on Mac, Ctrl+K on Windows/Linux"
@@ -340,6 +348,18 @@ export default function Home() {
           </article>
         )}
       </div>
+
+      {/* Off-screen render for share image capture — only mounted when a
+          result exists so we don't pay the render cost on the input state. */}
+      {result && (
+        <ShareableEntry
+          innerRef={shareableRef}
+          title={submittedTitle}
+          company={submittedCompany}
+          entryNumber={entryNumber}
+          sections={sections}
+        />
+      )}
     </main>
   );
 }
